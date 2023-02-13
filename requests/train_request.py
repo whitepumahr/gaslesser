@@ -7,8 +7,12 @@ from sc2.bot_ai import BotAI
 # > Units:
 from sc2.units import Units
 
+# > Unit:
+from sc2.unit import Unit
+
 # > IDs:
 from sc2.ids.unit_typeid import UnitTypeId
+from sc2.ids.ability_id import AbilityId
 
 # Dataclasses:
 import dataclasses
@@ -18,6 +22,9 @@ import loguru
 
 # Bases:
 from bot.bases import Request
+
+# Dicts:
+from bot.dicts import LARVA_MORPH_ABILITIES
 
 
 # Classes:
@@ -76,6 +83,13 @@ class TrainRequest(Request):
                 if await self.verify_able(AI) is False:
                     return False
 
-                larva.random.train(self.id)
+                selected_larva: Unit = larva.random
 
-                self.valid_attempts += 1
+                if LARVA_MORPH_ABILITIES[self.id] in await AI.get_available_abilities(
+                    selected_larva
+                ):
+                    larva.random.train(self.id)
+
+                    self.valid_attempts += 1
+                else:
+                    return False

@@ -4,6 +4,9 @@
 # > Bot AI:
 from sc2.bot_ai import BotAI, Race
 
+# > Unit:
+from sc2.unit import Unit
+
 # > IDs:
 from sc2.ids.unit_typeid import UnitTypeId
 
@@ -11,10 +14,11 @@ from sc2.ids.unit_typeid import UnitTypeId
 import typing
 
 # Managers:
-from .managers import BuildingExecutionManager, EnemyTrackerManager
-
-from .requests import BuildRequest, TrainRequest
-
+from .managers import (
+    BuildingExecutionManager,
+    TrainingExecutionManager,
+    EnemyTrackerManager,
+)
 
 # Classes:
 class Gasless(BotAI):
@@ -49,10 +53,19 @@ class Gasless(BotAI):
         return enemy_unit_tally
 
     # Events:
+    async def on_building_construction_started(self, unit: Unit):
+        await self.BuildingExecutionManager.on_building_construction_started(unit)
+
+    async def on_unit_destroyed(self, tag: int):
+        await self.BuildingExecutionManager.on_unit_destroyed(tag)
+
     async def on_start(self):
         # Manager References:
         self.BuildingExecutionManager: BuildingExecutionManager = (
             BuildingExecutionManager()
+        )
+        self.TrainingExecutionManager: TrainingExecutionManager = (
+            TrainingExecutionManager()
         )
         self.EnemyTrackerManager: EnemyTrackerManager = EnemyTrackerManager(self)
 
@@ -63,4 +76,5 @@ class Gasless(BotAI):
 
     async def on_step(self, iteration: int):
         await self.BuildingExecutionManager.on_frame(iteration, self)
+        await self.TrainingExecutionManager.on_frame(iteration, self)
         await self.EnemyTrackerManager.on_step(iteration, self)

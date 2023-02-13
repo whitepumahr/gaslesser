@@ -46,7 +46,10 @@ class EnemyTrackerManager(Manager):
             if enemy_structure.tag in self.enemy_structures:
                 continue
 
-            self.enemy_race[enemy_structure.tag] = [enemy_structure.type_id, Point2]
+            self.enemy_structures[enemy_structure.tag] = [
+                enemy_structure.type_id,
+                Point2,
+            ]
 
         for enemy_unit in AI.enemy_units:
             if enemy_unit.tag in self.enemy_units:
