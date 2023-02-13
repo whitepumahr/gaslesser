@@ -13,15 +13,16 @@ from sc2.ids.unit_typeid import UnitTypeId
 # Typing:
 import typing
 
+# Sequence:
+from .sequence import BEGINNER_SEQUENCE
+
 # Managers:
 from .managers import (
     BuildingExecutionManager,
     TrainingExecutionManager,
     EnemyTrackerManager,
+    DebuggingManager,
 )
-
-from .wrappers import CustomWrapper
-from .requests import TrainRequest, BuildRequest
 
 
 # Classes:
@@ -72,13 +73,26 @@ class Gasless(BotAI):
             TrainingExecutionManager()
         )
         self.EnemyTrackerManager: EnemyTrackerManager = EnemyTrackerManager(self)
+        self.DebuggingManager: DebuggingManager = DebuggingManager(
+            DRAW_OPPONENT_BASE_LOCATIONS=True,
+            DRAW_VISIBLITY_PIXELMAP=False,
+            DRAW_PLACEMENT_GRID=False,
+            DRAW_PATHING_GRID=False,
+            DRAW_EXPANSIONS=True,
+        )
 
         # Miscellaneous:
         await self.chat_send(
             "You can thank Chronicles, Ratosh and the rest of the very helpful botting community for what is about to happen to you"
         )
 
+        # Starter Buildorder:
+        for request in BEGINNER_SEQUENCE:
+            await self.TrainingExecutionManager.queue_request(request)
+
     async def on_step(self, iteration: int):
+        # Updating Managers:
         await self.BuildingExecutionManager.on_frame(iteration, self)
         await self.TrainingExecutionManager.on_frame(iteration, self)
         await self.EnemyTrackerManager.on_step(iteration, self)
+        await self.DebuggingManager.on_step(iteration, self)
