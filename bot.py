@@ -20,6 +20,10 @@ from .managers import (
     EnemyTrackerManager,
 )
 
+from .wrappers import CustomWrapper
+from .requests import TrainRequest, BuildRequest
+
+
 # Classes:
 class Gasless(BotAI):
     """
