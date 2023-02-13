@@ -58,7 +58,7 @@ class Gasless(BotAI):
 
     # Events:
     async def on_building_construction_started(self, unit: Unit):
-        await self.BuildingExecutionManager.on_building_construction_started(unit)
+        await self.BuildingExecutionManager.on_building_construction_started(unit, self)
 
     async def on_unit_destroyed(self, tag: int):
         await self.BuildingExecutionManager.on_unit_destroyed(tag)

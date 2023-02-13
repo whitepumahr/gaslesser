@@ -44,24 +44,26 @@ class BuildingExecutionManager(Manager):
         self.requests: list = []
 
     # Methods:
-    async def on_building_construction_started(self, unit: Unit) -> None:
-        self.structures[unit.tag] = [unit.type_id, unit.position]
+    async def on_building_construction_started(self, unit: Unit, AI: BotAI) -> None:
+        if unit.type_id == UnitTypeId.EXTRACTOR:
+            self.structures[unit.tag] = [
+                unit.type_id,
+                AI.vespene_geyser.closest_to(unit.position),
+            ]
+        else:
+            self.structures[unit.tag] = [unit.type_id, unit.position]
 
-    async def on_unit_destroyed(
-        self, tag_of_a_unit_or_structure_that_just_died: int
-    ) -> None:
-        if tag_of_a_unit_or_structure_that_just_died not in self.structures:
+    async def on_unit_destroyed(self, tag: int) -> None:
+        if tag not in self.structures:
             return None
 
-        structure_information: typing.List[UnitTypeId, Point2] = self.structures[
-            tag_of_a_unit_or_structure_that_just_died
-        ]
+        structure_information: typing.List[UnitTypeId, Point2] = self.structures[tag]
 
         await self.queue_request(
             BuildRequest(id=structure_information[0], position=structure_information[1])
         )
 
-        del self.structures[tag_of_a_unit_or_structure_that_just_died]
+        del self.structures[tag]
 
     async def execute_request(self, request: Request, AI: BotAI) -> bool:
         if hasattr(request, "execute_wrapper") is True:

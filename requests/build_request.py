@@ -33,7 +33,7 @@ class BuildRequest(Request):
     :param quantity:
     """
 
-    position: typing.Union[typing.Set[Point2], Point2]
+    position: typing.Union[typing.List[Point2], Point2, typing.List[Unit], Unit]
 
     valid_attempts: int = 0
     quantity: int = 1
@@ -89,7 +89,6 @@ class BuildRequest(Request):
                 drone: typing.Optional[Unit] = AI.workers.find_by_tag(drone_tag)
                 if drone is not None:
                     drone.build(self.id, self.queued_positions[drone_tag])
-                    print(drone_tag, ":", self.queued_positions[drone_tag])
 
             if self.valid_attempts == self.quantity:
                 return True
@@ -97,10 +96,17 @@ class BuildRequest(Request):
             if await self.verify_able(AI) is False:
                 return False
 
-            if isinstance(self.position, set):
+            if isinstance(self.position, list):
                 if len(self.position) > 0:
-                    position: Point2 = self.position.pop()
-                    drone: typing.Optional[Unit] = await self.find_drone(position, AI)
+                    position: typing.Union[Point2, Unit] = self.position.pop()
+
+                    drone_selection_position = position
+                    if isinstance(drone_selection_position, Unit):
+                        drone_selection_position = position.position
+
+                    drone: typing.Optional[Unit] = await self.find_drone(
+                        drone_selection_position, AI
+                    )
                     if drone is not None:
                         self.en_route.add(drone.tag)
 
@@ -110,8 +116,20 @@ class BuildRequest(Request):
                         self.valid_attempts += 1
                     else:
                         self.position.add(position)
-            else:
+
+            elif isinstance(self.position, Point2):
                 drone: typing.Optional[Unit] = await self.find_drone(self.position, AI)
+                if drone is not None:
+                    self.en_route.add(drone.tag)
+
+                    drone.build(self.id, self.position)
+
+                    self.valid_attempts += 1
+
+            elif isinstance(self.position, Unit):
+                drone: typing.Optional[Unit] = await self.find_drone(
+                    self.position.position, AI
+                )
                 if drone is not None:
                     self.en_route.add(drone.tag)
 
