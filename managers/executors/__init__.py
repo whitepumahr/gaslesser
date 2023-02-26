@@ -1,2 +1,3 @@
 from .building_execution_manager import BuildingExecutionManager
 from .training_execution_manager import TrainingExecutionManager
+from .scouting_execution_manager import ScoutingExecutionManager

@@ -13,6 +13,12 @@ from sc2.ids.unit_typeid import UnitTypeId
 # Typing:
 import typing
 
+# Libraries:
+from .libraries import MapParser
+
+# Requests:
+from .requests import ScoutRequest
+
 # Sequence:
 from .sequence import BEGINNER_SEQUENCE
 
@@ -20,8 +26,10 @@ from .sequence import BEGINNER_SEQUENCE
 from .managers import (
     BuildingExecutionManager,
     TrainingExecutionManager,
+    ScoutingExecutionManager,
     EnemyTrackerManager,
     DebuggingManager,
+    ReactionManager,
 )
 
 
@@ -72,6 +80,10 @@ class Gasless(BotAI):
         self.TrainingExecutionManager: TrainingExecutionManager = (
             TrainingExecutionManager()
         )
+        self.ScoutingExecutionManager: ScoutingExecutionManager = (
+            ScoutingExecutionManager()
+        )
+
         self.EnemyTrackerManager: EnemyTrackerManager = EnemyTrackerManager(self)
         self.DebuggingManager: DebuggingManager = DebuggingManager(
             DRAW_OPPONENT_BASE_LOCATIONS=True,
@@ -80,19 +92,49 @@ class Gasless(BotAI):
             DRAW_PATHING_GRID=False,
             DRAW_EXPANSIONS=True,
         )
+        self.ReactionManager: ReactionManager = ReactionManager()
+
+        # Library References:
+        self.MapParser: MapParser = MapParser(DRAW_RAMP_TILES=True)
 
         # Miscellaneous:
         await self.chat_send(
             "You can thank Chronicles, Ratosh and the rest of the very helpful botting community for what is about to happen to you"
         )
 
+        self.map_parser_json = await self.MapParser.analyze(self)
+
         # Starter Buildorder:
         for request in BEGINNER_SEQUENCE:
             await self.TrainingExecutionManager.queue_request(request)
 
+        # Lists:
+        self.managers: list = [
+            self.BuildingExecutionManager,
+            self.TrainingExecutionManager,
+            self.ScoutingExecutionManager,
+            self.EnemyTrackerManager,
+            self.DebuggingManager,
+            self.ReactionManager,
+        ]
+
+        # Sets:
+        self.drone_assignment: typing.Set[int] = set()
+        self.scouting_units: typing.Set[UnitTypeId] = set()
+
+        # Miscellaneous:
+        await self.ScoutingExecutionManager.queue_request(
+            ScoutRequest(
+                patrol_positions=[self.enemy_start_locations[0]],
+                id=UnitTypeId.DRONE,
+                prioritize_main=False,
+                return_back=True,
+            )
+        )
+
     async def on_step(self, iteration: int):
         # Updating Managers:
-        await self.BuildingExecutionManager.on_frame(iteration, self)
-        await self.TrainingExecutionManager.on_frame(iteration, self)
-        await self.EnemyTrackerManager.on_step(iteration, self)
-        await self.DebuggingManager.on_step(iteration, self)
+        for manager in self.managers:
+            await manager.on_step(iteration, self)
+
+        await self.MapParser.analyze(self)

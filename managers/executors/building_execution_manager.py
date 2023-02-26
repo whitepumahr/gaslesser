@@ -78,7 +78,7 @@ class BuildingExecutionManager(Manager):
         self.requests.append(request)
         return True
 
-    async def on_frame(self, iteration: int, AI: BotAI) -> None:
+    async def on_step(self, iteration: int, AI: BotAI) -> None:
         cleanup: list = []
 
         # Executing Requests:

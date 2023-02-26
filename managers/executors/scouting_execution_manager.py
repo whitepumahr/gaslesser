@@ -9,7 +9,7 @@ from bot.bases import Manager, Request
 
 
 # Classes:
-class TrainingExecutionManager(Manager):
+class ScoutingExecutionManager(Manager):
     """
     Parses training requests and executes them.
     """
@@ -17,7 +17,6 @@ class TrainingExecutionManager(Manager):
     # Initialization:
     def __init__(self) -> None:
         # Lists:
-        self.verifying: list = []
         self.requests: list = []
 
     # Methods:
@@ -42,19 +41,9 @@ class TrainingExecutionManager(Manager):
             result: bool = await self.execute_request(request, AI)
 
             if result is True:
-                self.verifying.append(request)
-
-        # Verifying Requests:
-        for request in self.verifying:
-            if request in self.requests:
-                self.requests.remove(request)
-
-            await self.execute_request(request, AI)
-
-            if request.valid_attempts == request.quantity:
                 cleanup.append(request)
 
         # Cleaning Requests:
         for request in cleanup:
-            if request in self.verifying:
-                self.verifying.remove(request)
+            if request in self.requests:
+                self.requests.remove(request)

@@ -23,11 +23,9 @@ class Request:
     Base class for requests.
 
     Types of requests:
-        Upgrade Request,
+        Scout Request,
         Train Request,
         Build Request,
-        Expand Request,
-        Ability Request,
 
     :param id:
     """
